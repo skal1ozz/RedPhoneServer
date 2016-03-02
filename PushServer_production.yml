@@ -1,0 +1,33 @@
+redis:
+  url: redis://localhost:6379/2
+
+authentication:
+  servers:
+    -
+      name: 123
+      password: 123
+gcm:
+  xmpp: false
+  apiKey: OIzoAuVXAzQJfUhT7TIERyQWeRdgBhJldYUF2A2
+  senderId: 102398475623
+  redphoneApiKey: OIzoAuVXAzQJfUhT7TIERyQWeRdgBhJldYUF2A2
+
+# to use APN you'll need to modify:
+#     src/main/java/org/whispersystems/pushserver/senders/APNSender.java
+# like I've explained here:
+#    https://github.com/skal1ozz/RedPhoneServer/blob/master/TextSecure-Server_Installation.txt
+
+apn:
+  feedback: false
+  voipKey: 'path/to/voipKey_without_des.pem'
+  pushKey: 'path/to/pushKey_without_des.pem'
+  voipCertificate: 'path/to/pushCert.pem'
+  pushCertificate: 'path/to/pushCert.pem'
+
+server:
+    applicationConnectors:
+    - type: http
+      port: 9090
+    adminConnectors:
+    - type: http
+      port: 9091

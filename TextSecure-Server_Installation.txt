@@ -1,0 +1,109 @@
+To start your own TextSecure Server first of all you need to modify your application.
+1. build.gradle:
+    Change this vars: TEXTSECURE_URL, REDPHONE_MASTER_URL, REDPHONE_RELAY_HOST, REDPHONE_PREFIX_NAME.
+    TEXTSECURE_URL - Your TextSecure Server server.
+    REDPHONE_MASTER_URL - Backend domain for calls. "/api/" requests.
+    REDPHONE_RELAY_HOST - Master Relay domain name. "/session/" requests. (TLS over TCP keepalive) port 31337.
+    REDPHONE_PREFIX_NAME - Domain prefix for relay domains.
+2. src/org/throughtcrime/seecuresms/jobs/GcmRefreshJob.java:
+   change REGISTRATION_ID to your app number in the Google developer console(create app with push and you'll get the number).
+3. Create TLS certificates for secure connections.
+       Convert certificates in BKS format with names "redphone.store"  and "whisper.store" and put them to res/raw folder
+
+How to Start TextSecure:
+1. Install Maven, JDK and Cryptography extension.
+2. Make a clone of the WebSocket-Resources
+3. Make a clone of the dropwizard-simpleauth
+4. Make a clone of the TextSecure-Server
+5. Make a clone of the PushServer
+6. Install WebSocket-Resources
+7. Install dropwizard-simpleauth
+8. Install PushServer.
+9. Install TextSecure-Server. (mvn install -DskipTests)
+10. Setup services (twilio, push, s3, postgres, redis, apn, gcm)
+11. Setup TextSecure-Server config file.
+12. Setup PushServer config file.
+13. Run the PushServer
+14. Run the TextSecure Server
+
+To create Secure connection use a proxy(for example nginx).
+Nginx example config:
+http {
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+    upstream textserver {
+        server 192.168.1.1:8080;
+    }
+    upstream redphone_master {
+        server 192.168.1.2:8080;
+    }
+    server {
+        listen 0.0.0.0:443 ssl; # or real IP of proxy
+	ssl_certificate     /path/to/cert.pem;
+        ssl_certificate_key /path/to/key.pem;
+        server_name textsecure.example.com; # real domain name of the proxy
+        location /v1/websocket/ {
+            proxy_redirect off;
+            proxy_set_header Host $host;
+            proxy_pass http://textserver/v1/websocket/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+        location /api/ {
+            # or you can use alias to the blank file to add 200 ok;
+            # alias /pash/to/blank.html;
+            # or just return 200/204;
+            # or proxy to the redphone_master server 
+            # example:
+            #     proxy_redirect off;
+            #	  proxy_set_header Host $host;
+            #	  proxy_pass http://redphone_master;
+            return 204;
+        }
+        location / {
+            proxy_redirect off;
+            proxy_set_header Host $host;
+            proxy_pass http://textserver;
+        }
+    }
+}
+
+How to start Push APN:
+change: src/main/java/org/whispersystems/pushserver/senders/APNSender.java
+  add:
+    import java.io.FileInputStream;
+  change:
+    //PEMReader       reader           = new PEMReader(new InputStreamReader(new ByteArrayInputStream(pemCertificate.getBytes())));
+    // to
+    PEMReader       reader           = new PEMReader(new InputStreamReader(new FileInputStream(pemCertificate)));
+  change:
+    //reader = new PEMReader(new InputStreamReader(new ByteArrayInputStream(pemKey.getBytes())));
+    // to
+    reader = new PEMReader(new InputStreamReader(new FileInputStream(pemKey)));
+
+config:
+  feedback: false
+  voipKey: 'path/to/voipKey_without_des.pem'
+  pushKey: 'path/to/pushKey_without_des.pem'
+  voipCertificate: 'path/to/pushCert.pem'
+  pushCertificate: 'path/to/pushCert.pem'
+
+# create cert and key from .p12
+    # create cert.pem
+    openssl pkcs12 -in archive.p12 -nokeys -out cert.pem
+
+    # create private key.pem
+    # need to enter password
+    # need to enter passphrase
+    openssl pkcs12 -in archive.p12 -nocerts -out private.pem
+
+    # remove passphrase from key
+    # need to enter passphrase
+    openssl rsa -in private.pem -out private.rsa.pem
+
+Do not forget to mirate you databases before start:
+    java -jar target/TextSecureServer-0.86.jar accountdb migrate
+    java -jar target/TextSecureServer-0.86.jar messagedb migrate

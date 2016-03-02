@@ -1,0 +1,49 @@
+# This is the sample config/production.yml file for the TextSecure Server
+# Pay attention! To start TextSecur server you will need to install and start PushServer
+
+twilio: 
+  accountId: ACa4f1234a3124235433c423423a2fa203
+  accountToken: 123a12b1231241241535cd12e124fabc
+  numbers:
+    -
+      +12345678901
+  localDomain: example.com
+
+push:
+  host: localhost
+  port: 9090
+  username: 123
+  password: 123
+
+s3:
+  accessKey: OKIOG1AADZZZZFFDHJUQ
+  accessSecret: 1x1JcJ26+MAQWERtYAaOUyTrRewQaS1dfgHJkLMn
+  attachmentsBucket: signaltest
+
+directory:
+  url: "redis://localhost:6379/0"
+
+cache:
+  url: "redis://localhost:6379/1"
+
+websocket:
+  enabled: true
+
+messageStore: # Postgres database configuration for message store
+  driverClass: org.postgresql.Driver
+  user: "octopus"
+  password: "octopus"
+  url: "jdbc:postgresql://localhost:5432/message"
+
+database:
+  driverClass: org.postgresql.Driver
+  user: "db_user"
+  password: "db_user_pass"
+  url: "jdbc:postgresql://localhost:5432/accounts"
+  properties:
+    charSet: UTF-8
+
+#federation: # is disabled
+
+redphone:
+    authKey: 1234567890
